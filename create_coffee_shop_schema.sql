@@ -118,21 +118,13 @@ CREATE TABLE promotion_item (
 -- ============================
 
 CREATE INDEX idx_manager_ssn ON manager(ssn);
-
 CREATE INDEX idx_barista_ssn ON barista(ssn);
-
 CREATE INDEX idx_work_schedule_ssn ON work_schedule(ssn);
-
 CREATE INDEX idx_recipe_menu_item ON recipe(menu_item_name);
-
 CREATE INDEX idx_prep_step_recipe ON preparation_step(recipe_id);
-
 CREATE INDEX idx_recipe_ingr_inventory ON recipe_ingredient(inventory_item_name);
-
 CREATE INDEX idx_order_timestamp ON "order"(timestamp);
-
 CREATE INDEX idx_order_line_item_item ON order_line_item(menu_item_name);
-
 CREATE INDEX idx_promotion_item_menu ON promotion_item(menu_item_name);
 
 -- ============================
@@ -140,51 +132,51 @@ CREATE INDEX idx_promotion_item_menu ON promotion_item(menu_item_name);
 -- ============================
 
 INSERT INTO employee VALUES
-  ('123-45-6789','Alice Smith','alice@example.com',55000.00),
-  ('987-65-4321','Bob Jones','bob@example.com',45000.00);
+    ('123-45-6789','Alice Smith','alice@example.com',55000.00),
+    ('987-65-4321','Bob Jones','bob@example.com',45000.00);
 
 INSERT INTO manager VALUES
-  ('123-45-6789',25.00);
+    ('123-45-6789',25.00);
 
 INSERT INTO barista VALUES
-  ('987-65-4321');
+    ('987-65-4321');
 
 INSERT INTO work_schedule VALUES
-  ('987-65-4321','Monday','08:00','12:00'),
-  ('987-65-4321','Tuesday','08:00','12:00');
+    ('987-65-4321','Monday','08:00','12:00'),
+    ('987-65-4321','Tuesday','08:00','12:00');
 
 INSERT INTO inventory_item VALUES
-  ('Milk','oz',0.50,500.00),
-  ('Beans','lb',10.00,100.00);
+    ('Milk','oz',0.50,500.00),
+    ('Beans','lb',10.00,100.00);
 
 INSERT INTO menu_item VALUES
-  ('Latte',12,'coffee',3.50,TRUE),
-  ('IcedTea',16,'tea',2.75,FALSE);
+    ('Latte',12,'coffee',3.50,TRUE),
+    ('IcedTea',16,'tea',2.75,FALSE);
 
 INSERT INTO recipe(menu_item_name) VALUES
-  ('Latte'),
-  ('IcedTea');
+    ('Latte'),
+    ('IcedTea');
 
-INSERT INTO preparation_step(recipe_id,step_number,step_name) VALUES
-  (1,1,'Steam Milk'),
-  (1,2,'Brew Espresso'),
-  (2,1,'Brew Tea'),
-  (2,2,'Add Ice');
+INSERT INTO preparation_step(recipe_id, step_number, step_name) VALUES
+    (1,1,'Steam Milk'),
+    (1,2,'Brew Espresso'),
+    (2,1,'Brew Tea'),
+    (2,2,'Add Ice');
 
 INSERT INTO recipe_ingredient VALUES
-  (1,'Milk',8.00,'oz'),
-  (1,'Beans',0.10,'lb');
+    (1,'Milk',8.00,'oz'),
+    (1,'Beans',0.10,'lb');
 
-INSERT INTO "order"(timestamp,payment_method) VALUES
-  ('2025-04-15 09:30','cash'),
-  ('2025-04-15 10:00','credit_card');
+INSERT INTO "order"(timestamp, payment_method) VALUES
+    ('2025-04-15 09:30','cash'),
+    ('2025-04-15 10:00','credit_card');
 
 INSERT INTO order_line_item VALUES
-  (1,'Latte',2),
-  (2,'IcedTea',1);
+    (1,'Latte',2),
+    (2,'IcedTea',1);
 
-INSERT INTO promotion(start_time,end_time,discounted_price) VALUES
-  ('2025-04-20 08:00','2025-04-20 10:00',3.00);
+INSERT INTO promotion(start_time, end_time, discounted_price) VALUES
+    ('2025-04-20 08:00','2025-04-20 10:00',3.00);
 
 INSERT INTO promotion_item VALUES
-  (1,'Latte');
+    (1,'Latte');
