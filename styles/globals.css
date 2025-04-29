@@ -14,6 +14,7 @@
   :root {
     --background: #3e2723; /* rich coffee brown */
     --foreground: #fbe9e7; /* light cream-pinkish */
+  }
 }
 
 body {
@@ -22,12 +23,12 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: center;
-  background-color: var(--background); /* fallback if image fails */
+  background-color: var(--background); /* fallback */
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 /* Button style */
 .btn {
-  @apply px-4 py-2 bg-[#6d4c41] hover:bg-[#5d4037] text-white font-semibold rounded; /* chocolate brown button */
+  @apply px-4 py-2 bg-[#6d4c41] hover:bg-[#5d4037] text-white font-semibold rounded;
 }
