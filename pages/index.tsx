@@ -1,28 +1,30 @@
-import Link from 'next/link'
-import { withAuth } from '../utils/withAuth'
-import { useAuth } from '../contexts/AuthContext'
+import Link from "next/link"
+import { withAuth } from "../utils/withAuth"
+import { useAuth } from "../contexts/AuthContext"
 
 function HomePage() {
   const { user, logout } = useAuth()
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl mb-4">Welcome, {user?.email}</h1>
-      {user?.role === 'manager' && (
-        <nav className="flex flex-col gap-2 mb-4">
-          <Link href="/employees"><a>👥 Manage Employees</a></Link>
-          <Link href="/inventory"><a>📦 Manage Inventory</a></Link>
-          <Link href="/accounting"><a>📊 View Accounting</a></Link>
-        </nav>
-      )}
-      {user?.role === 'barista' && (
-        <nav className="flex flex-col gap-2 mb-4">
-          <Link href="/pos"><a>☕ Create Order (POS)</a></Link>
-        </nav>
-      )}
-      <button onClick={logout} className="mt-4 btn">
-        Logout
-      </button>
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="p-8 rounded-lg border-4 border-[#6d4c41] bg-[#3e272380] backdrop-blur-md w-full max-w-2xl text-center">
+        <h1 className="text-3xl font-bold mb-6 text-white">Welcome, {user?.email}</h1>
+        {user?.role === 'manager' && (
+          <nav className="flex flex-col gap-4 mb-8">
+            <Link href="/employees" className="text-blue-400 hover:underline text-xl">👥 Manage Employees</Link>
+            <Link href="/inventory" className="text-blue-400 hover:underline text-xl">📦 Manage Inventory</Link>
+            <Link href="/accounting" className="text-blue-400 hover:underline text-xl">📊 View Accounting</Link>
+          </nav>
+        )}
+        {user?.role === 'barista' && (
+          <nav className="flex flex-col gap-4 mb-8">
+            <Link href="/pos" className="text-blue-400 hover:underline text-xl">☕ Create Order (POS)</Link>
+          </nav>
+        )}
+        <button onClick={logout} className="btn bg-red-500 hover:bg-red-600">
+          Logout
+        </button>
+      </div>
     </div>
   )
 }
