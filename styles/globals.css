@@ -23,9 +23,14 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: center;
-  background-color: var(--background); /* fallback */
-  color: var(--foreground);
+  background-color: var(--background);
+  color: white; /* Force body text color to white */
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Input style */
+input, select, textarea {
+  @apply w-full p-2 border rounded text-white bg-transparent border-[#6d4c41] placeholder-gray-300;
 }
 
 /* Button style */
