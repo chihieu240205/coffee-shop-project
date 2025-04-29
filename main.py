@@ -7,9 +7,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlmodel import select
-from auth import get_password_hash, authenticate_user as auth_emp, create_access_token, verify_password
-from models import Customer, CustomerCreate, CustomerRead
+from sqlmodel import select, Session
 
 from database import init_db, get_session
 from auth import (
@@ -17,7 +15,8 @@ from auth import (
     create_access_token,
     get_current_user,
     get_password_hash,
-    require_manager_role
+    require_manager_role,
+    verify_password,
 )
 from models import (
     Employee,
@@ -37,9 +36,41 @@ from models import (
     EmployeeCreate,
     EmployeeRead,
     EmployeeUpdate,
+    Customer,
+    CustomerCreate,
+    CustomerRead,
 )
 
 app = FastAPI()
+
+class MeResp(BaseModel):
+    ssn: str
+    name: str
+    email: str
+    salary: float
+    role: str
+
+    model_config = {"from_attributes": True}
+
+@app.get("/me", response_model=MeResp)
+def read_current_user(
+    current: Employee = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    # figure out if they’re a manager
+    is_mgr = session.exec(
+        select(Manager).where(Manager.ssn == current.ssn)
+    ).first()
+    role = "manager" if is_mgr else "barista"
+
+    # return a dict with all the fields FastAPI/Pydantic expects
+    return {
+        "ssn": current.ssn,
+        "name": current.name,
+        "email": current.email,
+        "salary": current.salary,
+        "role": role,
+    }
 
 # 0) Bootstrap the database
 @app.on_event("startup")
@@ -51,8 +82,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # ---- 0a) SIGNUP / REGISTER for employees (manager can still use POST /employees/) ----
 class SignupPayload(BaseModel):
+    ssn: str
     name: str
     email: str
+    salary: float
     password: str
 
 
@@ -71,8 +104,10 @@ def signup(
     # 2) hash password & create employee
     hashed_pw = get_password_hash(user_in.password)
     new_emp = Employee(
+        ssn=user_in.ssn,
         name=user_in.name,
         email=user_in.email,
+        salary=user_in.salary,
         password_hash=hashed_pw,
     )
     session.add(new_emp)
@@ -113,92 +148,55 @@ def protected():
 def list_employees(session=Depends(get_session)):
     return session.exec(select(Employee)).all()
 
-
 @app.get("/managers/", response_model=List[Manager], dependencies=[protected()])
 def list_managers(session=Depends(get_session)):
     return session.exec(select(Manager)).all()
-
 
 @app.get("/baristas/", response_model=List[Barista], dependencies=[protected()])
 def list_baristas(session=Depends(get_session)):
     return session.exec(select(Barista)).all()
 
-
-@app.get(
-    "/work_schedules/", response_model=List[WorkSchedule], dependencies=[protected()]
-)
+@app.get("/work_schedules/", response_model=List[WorkSchedule], dependencies=[protected()])
 def list_work_schedules(session=Depends(get_session)):
     return session.exec(select(WorkSchedule)).all()
 
-
-@app.get(
-    "/accounting_entries/",
-    response_model=List[AccountingEntry],
-    dependencies=[protected()],
-)
+@app.get("/accounting_entries/", response_model=List[AccountingEntry], dependencies=[protected()])
 def list_accounting_entries(session=Depends(get_session)):
     return session.exec(select(AccountingEntry)).all()
 
-
-@app.get(
-    "/inventory_items/", response_model=List[InventoryItem], dependencies=[protected()]
-)
+@app.get("/inventory_items/", response_model=List[InventoryItem], dependencies=[protected()])
 def list_inventory_items(session=Depends(get_session)):
     return session.exec(select(InventoryItem)).all()
-
 
 @app.get("/menu_items/", response_model=List[MenuItem], dependencies=[protected()])
 def list_menu_items(session=Depends(get_session)):
     return session.exec(select(MenuItem)).all()
 
-
 @app.get("/recipes/", response_model=List[Recipe], dependencies=[protected()])
 def list_recipes(session=Depends(get_session)):
     return session.exec(select(Recipe)).all()
 
-
-@app.get(
-    "/preparation_steps/",
-    response_model=List[PreparationStep],
-    dependencies=[protected()],
-)
+@app.get("/preparation_steps/", response_model=List[PreparationStep], dependencies=[protected()])
 def list_preparation_steps(session=Depends(get_session)):
     return session.exec(select(PreparationStep)).all()
 
-
-@app.get(
-    "/recipe_ingredients/",
-    response_model=List[RecipeIngredient],
-    dependencies=[protected()],
-)
+@app.get("/recipe_ingredients/", response_model=List[RecipeIngredient], dependencies=[protected()])
 def list_recipe_ingredients(session=Depends(get_session)):
     return session.exec(select(RecipeIngredient)).all()
-
 
 @app.get("/orders/", response_model=List[Order], dependencies=[protected()])
 def list_orders(session=Depends(get_session)):
     return session.exec(select(Order)).all()
 
-
-@app.get(
-    "/order_line_items/",
-    response_model=List[OrderLineItem],
-    dependencies=[protected()],
-)
+@app.get("/order_line_items/", response_model=List[OrderLineItem], dependencies=[protected()])
 def list_order_line_items(session=Depends(get_session)):
     return session.exec(select(OrderLineItem)).all()
-
 
 @app.get("/promotions/", response_model=List[Promotion], dependencies=[protected()])
 def list_promotions(session=Depends(get_session)):
     return session.exec(select(Promotion)).all()
 
-
-@app.get(
-    "/promotion_items/",
-    response_model=List[PromotionItem],
-    dependencies=[protected()],
-)
+@app.get("/promotion_items/", response_model=List[PromotionItem], dependencies=[protected()])
 def list_promotion_items(session=Depends(get_session)):
     return session.exec(select(PromotionItem)).all()
 
@@ -206,7 +204,6 @@ def list_promotion_items(session=Depends(get_session)):
 # ---- 3) INVENTORY REFILL ----
 class RefillPayload(BaseModel):
     quantity: float
-
 
 @app.post(
     "/inventory_items/{name}/refill",
@@ -243,11 +240,9 @@ class OrderItem(BaseModel):
     menu_item_name: str
     quantity: int
 
-
 class OrderCreate(BaseModel):
     items: List[OrderItem]
     payment_method: str
-
 
 @app.post("/orders/", response_model=Order, dependencies=[protected()])
 def create_order(
@@ -266,9 +261,7 @@ def create_order(
     for it in order_in.items:
         menu = session.get(MenuItem, it.menu_item_name)
         if not menu:
-            raise HTTPException(
-                status_code=404, detail=f"Menu item {it.menu_item_name} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Menu item {it.menu_item_name} not found")
 
         oli = OrderLineItem(
             order_id=order.order_id,
@@ -301,7 +294,6 @@ def create_order(
 
 
 # ---- 5) MANAGING EMPLOYEES (manager only) ----
-
 @app.post(
     "/employees/",
     response_model=EmployeeRead,
@@ -371,6 +363,7 @@ def delete_employee(
     session.delete(emp)
     session.commit()
 
+
 # ---- 6) MANAGING INVENTORY ITEMS ----
 class InventoryItemCreate(BaseModel):
     name: str
@@ -436,7 +429,7 @@ def delete_inventory_item(
         raise HTTPException(status_code=404, detail="Item not found")
     session.delete(item)
     session.commit()
-    
+
 
 # allow your front-end origin (or "*" for dev only)
 app.add_middleware(
@@ -446,8 +439,9 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
-    
-# --- Customer signup ---
+
+
+# --- Customer signup/login (unchanged) ---
 @app.post("/customers/signup", response_model=CustomerRead, status_code=status.HTTP_201_CREATED)
 def signup_customer(data: CustomerCreate, session=Depends(get_session)):
     if session.exec(select(Customer).where(Customer.email == data.email)).first():
@@ -455,18 +449,18 @@ def signup_customer(data: CustomerCreate, session=Depends(get_session)):
     cust = Customer(
         email=data.email,
         password_hash=get_password_hash(data.password),
-        name=data.name
+        name=data.name,
     )
     session.add(cust)
     session.commit()
     session.refresh(cust)
     return cust
 
-# --- Customer login/token ---
+
 @app.post("/customers/token")
 def login_customer(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    session=Depends(get_session)
+    session=Depends(get_session),
 ):
     stmt = select(Customer).where(Customer.email == form_data.username)
     cust = session.exec(stmt).first()
