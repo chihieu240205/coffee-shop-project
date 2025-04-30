@@ -30,15 +30,18 @@ def get_password_hash(password: str) -> str:
     return pwd_ctx.hash(password)
 
 
-def authenticate_user(
-    email: str, password: str, session=Depends(get_session)
-) -> Optional[Employee]:
-    stmt = select(Employee).where(Employee.email == email)
-    user = session.exec(stmt).first()
-    if not user or not verify_password(password, user.password_hash):
+def authenticate_user(email: str, password: str, session=Depends(get_session)) -> Optional[Employee]:
+    print("🔑 Attempting login for:", email)
+    user = session.exec(select(Employee).where(Employee.email == email)).first()
+    print("👤 Lookup result:", user)
+    if user:
+        ok = verify_password(password, user.password_hash)
+        print("🔒 Password match?", ok)
+    if not user or not ok:
+        print("❌ Authentication failed")
         return None
+    print("✅ Authentication succeeded")
     return user
-
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()

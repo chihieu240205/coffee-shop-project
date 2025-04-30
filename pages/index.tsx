@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { withAuth } from '../utils/withAuth'
+import withAuth from '../utils/withAuth'
 import { useAuth } from '../contexts/AuthContext'
 
 function HomePage() {

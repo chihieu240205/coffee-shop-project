@@ -9,18 +9,19 @@ import {
 import { loginEmployee as apiLogin, TokenResponse } from "../services/auth";
 import api from "../services/api";
 import { useRouter } from "next/router";
-import { jwtDecode } from "jwt-decode";
 
-type Role = "manager" | "barista";
-
-interface User {
+// this is exactly what /me returns
+export interface MeResp {
+  ssn: string;
+  name: string;
   email: string;
-  role: Role;
+  salary: number;
+  role: "manager" | "barista";
 }
 
 interface AuthContextType {
   token: string | null;
-  user: User | null;
+  user: MeResp | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -30,34 +31,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<MeResp | null>(null);
   const router = useRouter();
 
-  // on mount, try to restore from localStorage
+  // on mount, restore token + fetch /me
   useEffect(() => {
-    const stored = localStorage.getItem("token");
-    if (stored) {
-      try {
-        const { sub: email } = jwtDecode<{ sub: string }>(stored);
-        setToken(stored);
-        setUser({ email });
-        api.defaults.headers.common["Authorization"] = `Bearer ${stored}`;
-      } catch {
-        // invalid token → clear it
+    const t = localStorage.getItem("token");
+    if (!t) return;
+    api.defaults.headers.common["Authorization"] = `Bearer ${t}`;
+    api
+      .get<MeResp>("/me")
+      .then(({ data }) => {
+        setToken(t);
+        setUser(data);
+      })
+      .catch(() => {
         localStorage.removeItem("token");
-      }
-    }
+        delete api.defaults.headers.common["Authorization"];
+      });
   }, []);
 
   const login = async (username: string, password: string) => {
-    const res: TokenResponse = await apiLogin(username, password);
-    const newToken = res.access_token;
-    localStorage.setItem("token", newToken);
-    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-    setToken(newToken);
-    const { sub: email } = jwtDecode<{ sub: string }>(newToken);
-    setUser({ email });
-    router.push("/"); // or your protected home
+    // 1) get JWT
+    const { access_token } = await apiLogin(username, password);
+    localStorage.setItem("token", access_token);
+    api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+
+    // 2) fetch /me to populate user and decide routing
+    const { data: me } = await api.get<MeResp>("/me");
+    setToken(access_token);
+    setUser(me);
+
+    // 3) route based on role
+    if (me.role === "manager") {
+      router.push("/dashboard");
+    } else {
+      router.push("/index");
+    }
   };
 
   const logout = () => {
@@ -70,7 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ token, user, isAuthenticated: !!user, login, logout }}
+      value={{
+        token,
+        user,
+        isAuthenticated: !!user,
+        login,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -79,8 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used inside an AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be inside AuthProvider");
   return ctx;
 }

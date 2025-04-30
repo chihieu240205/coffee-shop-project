@@ -1,21 +1,27 @@
-import { useAuth } from '../contexts/AuthContext'
-import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+// utils/withAuth.tsx
+import React, { useEffect } from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "../contexts/AuthContext";
 
-export function withAuth<T>(Component: React.ComponentType<T>) {
-  return (props: T) => {
-    const { isAuthenticated } = useAuth()
-    const router = useRouter()
+export default function withAuth<P extends object>(
+  WrappedComponent: React.ComponentType<P>
+): React.FC<P> {
+  const Authenticated: React.FC<P> = (props) => {
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
       if (!isAuthenticated) {
-        router.replace('/login')
+        router.replace("/login");
       }
-    }, [isAuthenticated])
+    }, [isAuthenticated, router]);
 
     if (!isAuthenticated) {
-      return null  // or a loading spinner
+      return null; // or a spinner
     }
-    return <Component {...props} />
-  }
+
+    return <WrappedComponent {...props} />;
+  };
+
+  return Authenticated;
 }

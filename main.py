@@ -1,6 +1,6 @@
 # main.py
 
-from typing import List
+from typing import List, Literal
 from datetime import datetime
 
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -48,29 +48,30 @@ class MeResp(BaseModel):
     name: str
     email: str
     salary: float
-    role: str
-
+    role: Literal["manager","barista"]
+    
     model_config = {"from_attributes": True}
 
 @app.get("/me", response_model=MeResp)
 def read_current_user(
     current: Employee = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    session=Depends(get_session),
 ):
-    # figure out if they’re a manager
+    # determine role
     is_mgr = session.exec(
         select(Manager).where(Manager.ssn == current.ssn)
     ).first()
     role = "manager" if is_mgr else "barista"
 
-    # return a dict with all the fields FastAPI/Pydantic expects
-    return {
-        "ssn": current.ssn,
-        "name": current.name,
-        "email": current.email,
-        "salary": current.salary,
-        "role": role,
-    }
+    # now manually construct MeResp
+    return MeResp(
+        ssn=current.ssn,
+        name=current.name,
+        email=current.email,
+        salary=current.salary,
+        role=role,
+    )
+
 
 # 0) Bootstrap the database
 @app.on_event("startup")
@@ -134,6 +135,12 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
+        
+    is_mgr = session.exec(
+        select(Manager).where(Manager.ssn == user.ssn)
+    ).first() is not None
+    role = "manager" if is_mgr else "barista"
+    
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
 

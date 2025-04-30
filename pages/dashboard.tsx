@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { withAuth } from "../utils/withAuth";
+import withAuth from "../utils/withAuth";
 import { useAuth } from "../contexts/AuthContext";
 
 function Dashboard() {
@@ -11,8 +11,8 @@ function Dashboard() {
         <h1 className="text-4xl font-bold text-white mb-6">Welcome to your Dashboard</h1>
         <nav className="flex flex-col gap-4 mb-8">
           <Link href="/employees" className="text-blue-400 hover:underline text-xl">👥 Employees</Link>
-          <Link href="/inventory_items" className="text-blue-400 hover:underline text-xl">📦 Inventory</Link>
-          <Link href="/accounting_entries" className="text-blue-400 hover:underline text-xl">📊 Accounting</Link>
+          <Link href="/inventory" className="text-blue-400 hover:underline text-xl">📦 Inventory</Link>
+          <Link href="/accounting" className="text-blue-400 hover:underline text-xl">📊 Accounting</Link>
         </nav>
         <button
           onClick={logout}
