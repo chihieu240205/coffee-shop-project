@@ -32,7 +32,7 @@ function HomePage() {
           </nav>
         )}
 
-        <button onClick={logout} className="w-full py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded">
+        <button onClick={logout} className="w-full py-2 bg-red-500 hover:bg-red-500 text-white font-semibold rounded">
           Logout
         </button>
       </div>

@@ -16,7 +16,7 @@ function Dashboard() {
         </nav>
         <button
           onClick={logout}
-          className="btn bg-red-500 hover:bg-red-600"
+          className="btn bg-red-500 hover:bg-red-500"
         >
           Log Out
         </button>

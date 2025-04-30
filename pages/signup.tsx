@@ -29,7 +29,7 @@ export default function SignupPage() {
       const { access_token } = await signupEmployee(payload);
       // store token and redirect
       localStorage.setItem("token", access_token);
-      api.defaults.headers.common["Authorization"] = Bearer ${access_token};
+      api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
       router.push("/");
     } catch (err: any) {
       console.error("Signup error:", err);
