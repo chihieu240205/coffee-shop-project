@@ -1,9 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/table";
 import { Coffee, ArrowLeft, Plus, Edit3, Trash2 } from "lucide-react";
 import withAuth from "../utils/withAuth";
 import api from "../services/api";
@@ -15,71 +12,6 @@ interface MenuItem {
   price: number;
   is_hot: boolean;
 }
-
-const MenuToolbar: React.FC<{ onAdd: () => void }> = ({ onAdd }) => (
-  <div className="flex justify-between items-center mb-6">
-    <Button variant="ghost" className="flex items-center text-gray-700" onClick={() => window.history.back()}>
-      <ArrowLeft size={18} className="mr-2" /> Back
-    </Button>
-    <Button onClick={onAdd} variant="solid" className="flex items-center bg-amber-700 hover:bg-amber-600 text-white">
-      <Plus size={16} className="mr-2" /> Add Drink
-    </Button>
-  </div>
-);
-
-const MenuHeader: React.FC<{ count: number }> = ({ count }) => (
-  <div className="flex items-center mb-4">
-    <Coffee size={32} className="text-amber-700 mr-3" />
-    <div>
-      <h1 className="text-3xl font-bold">Menu</h1>
-      <p className="text-gray-500">Total drinks: {count}</p>
-    </div>
-  </div>
-);
-
-const MenuTable: React.FC<{
-  items: MenuItem[];
-  onEdit: (item: MenuItem) => void;
-  onDelete: (name: string) => void;
-}> = ({ items, onEdit, onDelete }) => (
-  <Card className="shadow-lg">
-    <CardHeader className="bg-amber-100">
-      <h2 className="text-xl font-semibold">Drink List</h2>
-    </CardHeader>
-    <CardContent>
-      <div className="overflow-x-auto">
-        <Table>
-          <THead className="bg-amber-50">
-            <Tr>
-              {['Name', 'Size', 'Type', 'Price', 'Hot?', 'Actions'].map(header => (
-                <Th key={header}>{header}</Th>
-              ))}
-            </Tr>
-          </THead>
-          <TBody>
-            {items.map(item => (
-              <Tr key={item.name} className="hover:bg-amber-50 transition">
-                <Td>{item.name}</Td>
-                <Td>{item.size_ounces} oz</Td>
-                <Td>{item.type}</Td>
-                <Td>${item.price.toFixed(2)}</Td>
-                <Td>{item.is_hot ? 'Yes' : 'No'}</Td>
-                <Td className="flex space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => onEdit(item)} className="border-amber-700 text-amber-700 hover:bg-amber-50">
-                    <Edit3 size={14} className="mr-1" /> Edit
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => onDelete(item.name)} className="hover:bg-red-700">
-                    <Trash2 size={14} className="mr-1" /> Delete
-                  </Button>
-                </Td>
-              </Tr>
-            ))}
-          </TBody>
-        </Table>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 function MenuItemsPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -129,17 +61,92 @@ function MenuItemsPage() {
   const handleDelete = async (name: string) => {
     if (!confirm("Delete this drink?")) return;
     await api.delete(`/menu_items/${name}`);
-    setItems(prev => prev.filter(i => i.name !== name));
+    setItems((prev) => prev.filter((i) => i.name !== name));
   };
 
-  if (loading) return <div className="flex justify-center items-center h-full"><p>Loading…</p></div>;
-  if (error) return <p className="text-red-600 text-center">{error}</p>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-white text-xl">Loading…</p>
+      </div>
+    );
+
+  if (error)
+    return <p className="text-red-500 text-center text-lg">{error}</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <MenuToolbar onAdd={handleAdd} />
-      <MenuHeader count={items.length} />
-      <MenuTable items={items} onEdit={handleEdit} onDelete={handleDelete} />
+    <div className="min-h-screen flex justify-center items-center p-8">
+      <div className="w-full max-w-5xl p-8 bg-[#3e272380] backdrop-blur-md border-4 border-[#6d4c41] rounded-lg text-white shadow-lg">
+        {/* Toolbar */}
+        <div className="flex justify-between items-center mb-6">
+          <button
+            className="flex items-center text-white hover:text-gray-300"
+            onClick={() => window.history.back()}
+          >
+            <ArrowLeft size={18} className="mr-2" />
+            Back
+          </button>
+          <button
+            onClick={handleAdd}
+            className="flex items-center bg-[#6d4c41] hover:bg-[#5d4037] text-white px-4 py-2 rounded"
+          >
+            <Plus size={16} className="mr-2" />
+            Add Drink
+          </button>
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center mb-6">
+          <Coffee size={32} className="text-amber-500 mr-3" />
+          <div>
+            <h1 className="text-3xl font-bold">Menu</h1>
+            <p className="text-gray-300">Total drinks: {items.length}</p>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto border-collapse">
+            <thead>
+              <tr className="bg-[#4e342e] text-white">
+                {["Name", "Size", "Type", "Price", "Hot?", "Actions"].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 border-b border-gray-500">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr
+                  key={item.name}
+                  className="hover:bg-[#5d403740] border-b border-gray-600 transition-all"
+                >
+                  <td className="px-4 py-2">{item.name}</td>
+                  <td className="px-4 py-2">{item.size_ounces} oz</td>
+                  <td className="px-4 py-2">{item.type}</td>
+                  <td className="px-4 py-2">${item.price.toFixed(2)}</td>
+                  <td className="px-4 py-2">{item.is_hot ? "Yes" : "No"}</td>
+                  <td className="px-4 py-2 space-x-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="text-amber-400 hover:underline flex items-center"
+                    >
+                      <Edit3 size={14} className="mr-1" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.name)}
+                      className="text-red-400 hover:underline flex items-center"
+                    >
+                      <Trash2 size={14} className="mr-1" /> Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
