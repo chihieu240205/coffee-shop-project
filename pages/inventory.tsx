@@ -1,13 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/table";
-import { Archive, ArrowLeft, Plus, Edit3, Trash2, LogOut } from "lucide-react";
-import withAuth from "../utils/withAuth";
 import api from "../services/api";
+import withAuth from "../utils/withAuth";
 import { useAuth } from "../contexts/AuthContext";
 
 interface InventoryItem {
@@ -17,9 +13,10 @@ interface InventoryItem {
   amount_in_stock: number;
 }
 
-export default withAuth(function InventoryItemsPage() {
+function InventoryItemsPage() {
   const { logout } = useAuth();
   const router = useRouter();
+
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -36,23 +33,26 @@ export default withAuth(function InventoryItemsPage() {
     }
   };
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   const handleAdd = async () => {
     const name = prompt("Name:");
     if (!name) return;
     const unit = prompt("Unit (e.g. oz, lb):");
     if (!unit) return;
-    const price = prompt("Price per unit:");
-    if (!price) return;
-    const amount = prompt("Initial stock amount:");
-    if (!amount) return;
+    const priceStr = prompt("Price per unit:");
+    if (!priceStr) return;
+    const amountStr = prompt("Initial stock amount:");
+    if (!amountStr) return;
+
     try {
       await api.post("/inventory_items", {
         name,
         unit,
-        price_per_unit: parseFloat(price),
-        amount_in_stock: parseFloat(amount),
+        price_per_unit: parseFloat(priceStr),
+        amount_in_stock: parseFloat(amountStr),
       });
       fetchItems();
     } catch (err: any) {
@@ -62,17 +62,19 @@ export default withAuth(function InventoryItemsPage() {
 
   const handleEdit = async (item: InventoryItem) => {
     const unit = prompt("Unit:", item.unit);
-    if (unit == null) return;
-    const price = prompt("Price per unit:", item.price_per_unit.toString());
-    if (price == null) return;
-    const amount = prompt("Stock amount:", item.amount_in_stock.toString());
-    if (amount == null) return;
+    if (unit === null) return;
+    const price_per_unit = parseFloat(
+      prompt("Price per unit:", item.price_per_unit.toString()) || ""
+    );
+    const amount_in_stock = parseFloat(
+      prompt("Stock amount:", item.amount_in_stock.toString()) || ""
+    );
     try {
       await api.patch(`/inventory_items/${item.name}`, {
         name: item.name,
         unit,
-        price_per_unit: parseFloat(price),
-        amount_in_stock: parseFloat(amount),
+        price_per_unit,
+        amount_in_stock,
       });
       fetchItems();
     } catch (err: any) {
@@ -81,78 +83,89 @@ export default withAuth(function InventoryItemsPage() {
   };
 
   const handleDelete = async (name: string) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
+    if (!confirm("Delete this item?")) return;
     try {
       await api.delete(`/inventory_items/${name}`);
-      setItems(prev => prev.filter(i => i.name !== name));
+      setItems((prev) => prev.filter((i) => i.name !== name));
     } catch {
       alert("Delete failed");
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-full"><p>Loading…</p></div>;
-  if (error) return <p className="text-red-600 text-center">{error}</p>;
+  if (loading) return <p className="text-white text-center">Loading…</p>;
+  if (error) return <p className="text-red-500 text-center">{error}</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <Button variant="ghost" onClick={() => router.push('/dashboard')} className="flex items-center text-gray-700">
-          <ArrowLeft size={18} className="mr-2" /> Back to Dashboard
-        </Button>
-        <Button onClick={logout} variant="outline" className="flex items-center text-red-600 border-red-600 hover:bg-red-50">
-          <LogOut size={16} className="mr-2" /> Log Out
-        </Button>
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="w-full max-w-6xl p-8 rounded-lg border-4 border-[#6d4c41] bg-[#3e272380] backdrop-blur-md text-white shadow-lg">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="mb-6 px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
+        >
+          ← Back to Dashboard
+        </button>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center space-x-3">
-          <Archive size={32} className="text-amber-700" />
-          <div>
-            <h1 className="text-4xl font-extrabold">Inventory</h1>
-            <p className="text-gray-500">Total: {items.length} items</p>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Inventory</h1>
+          <div className="flex gap-2">
+            <button
+              onClick={handleAdd}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
+            >
+              + Add Item
+            </button>
+            <button
+              onClick={logout}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded"
+            >
+              Log Out
+            </button>
           </div>
         </div>
-        <Button onClick={handleAdd} className="flex items-center bg-amber-700 hover:bg-amber-600 text-white" variant="solid">
-          <Plus size={16} className="mr-2" /> Add Item
-        </Button>
-      </div>
 
-      <Card className="shadow-lg">
-        <CardHeader className="bg-amber-100">
-          <h2 className="text-2xl font-semibold">Item List</h2>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <THead className="bg-amber-50">
-                <Tr>
-                  {['Name', 'Unit', 'Price / Unit', 'In Stock', 'Actions'].map(h => (
-                    <Th key={h}>{h}</Th>
-                  ))}
-                </Tr>
-              </THead>
-              <TBody>
-                {items.map(item => (
-                  <Tr key={item.name} className="hover:bg-amber-50 transition-all">
-                    <Td>{item.name}</Td>
-                    <Td>{item.unit}</Td>
-                    <Td>${item.price_per_unit.toFixed(2)}</Td>
-                    <Td>{item.amount_in_stock}</Td>
-                    <Td className="space-x-2">
-                      <Button size="sm" variant="outline" className="border-amber-700 text-amber-700 hover:bg-amber-50" onClick={() => handleEdit(item)}>
-                        <Edit3 size={14} className="mr-1" /> Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" className="hover:bg-red-700" onClick={() => handleDelete(item.name)}>
-                        <Trash2 size={14} className="mr-1" /> Delete
-                      </Button>
-                    </Td>
-                  </Tr>
-                ))}
-              </TBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse table-auto">
+            <thead>
+              <tr className="bg-[#4e342e] text-white">
+                <th className="px-4 py-3 border-b border-gray-500 text-left">Name</th>
+                <th className="px-4 py-3 border-b border-gray-500 text-left">Unit</th>
+                <th className="px-4 py-3 border-b border-gray-500 text-left">Price / Unit</th>
+                <th className="px-4 py-3 border-b border-gray-500 text-left">In Stock</th>
+                <th className="px-4 py-3 border-b border-gray-500 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((i) => (
+                <tr
+                  key={i.name}
+                  className="border-b border-gray-500 hover:bg-[#5d403780] transition-all"
+                >
+                  <td className="px-4 py-2">{i.name}</td>
+                  <td className="px-4 py-2">{i.unit}</td>
+                  <td className="px-4 py-2">${i.price_per_unit.toFixed(2)}</td>
+                  <td className="px-4 py-2">{i.amount_in_stock}</td>
+                  <td className="px-4 py-2 space-x-4">
+                    <button
+                      onClick={() => handleEdit(i)}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(i.name)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      ❌ Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
-});
+}
+
+export default withAuth(InventoryItemsPage);
