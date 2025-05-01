@@ -121,10 +121,11 @@ export default withAuth(function PosPage() {
           </label>
 
           {/* PLACE ORDER BUTTON */}
+          {/* PLACE ORDER BUTTON */}
           <div className="flex">
             <button
               onClick={placeOrder}
-              className="btn bg-blue-600 hover:bg-blue-700"
+              className="btn bg-green-600 hover:bg-green-700"
             >
               Place Order
             </button>
