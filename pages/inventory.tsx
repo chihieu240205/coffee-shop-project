@@ -14,7 +14,7 @@ interface InventoryItem {
 }
 
 function InventoryItemsPage() {
-  const { logout } = useAuth();
+  const { logout } = useAuth(); // still imported (can be removed if not reused)
   const router = useRouter();
 
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -92,8 +92,15 @@ function InventoryItemsPage() {
     }
   };
 
-  if (loading) return <p className="text-white text-center">Loading…</p>;
-  if (error) return <p className="text-red-500 text-center">{error}</p>;
+  if (loading)
+    return (
+      <p className="text-white text-center text-lg">
+        Loading…
+      </p>
+    );
+
+  if (error)
+    return <p className="text-red-500 text-center text-lg">{error}</p>;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
@@ -107,20 +114,12 @@ function InventoryItemsPage() {
 
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Inventory</h1>
-          <div className="flex gap-2">
-            <button
-              onClick={handleAdd}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
-            >
-              + Add Item
-            </button>
-            <button
-              onClick={logout}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded"
-            >
-              Log Out
-            </button>
-          </div>
+          <button
+            onClick={handleAdd}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
+          >
+            + Add Item
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -147,7 +146,7 @@ function InventoryItemsPage() {
                   <td className="px-4 py-2 space-x-4">
                     <button
                       onClick={() => handleEdit(i)}
-                      className="text-blue-400 hover:text-blue-300"
+                      className="text-amber-400 hover:text-amber-300"
                     >
                       ✏️ Edit
                     </button>
