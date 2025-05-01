@@ -2,10 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, THead, TBody, Tr, Th, Td } from "@/components/ui/table";
-import { Coffee, ArrowLeft, Plus, Edit3, Trash2 } from "lucide-react";
 import withAuth from "../utils/withAuth";
 import api from "../services/api";
 
@@ -16,7 +12,7 @@ interface Employee {
   salary: number;
 }
 
-export default withAuth(function EmployeesPage() {
+function EmployeesPage() {
   const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,7 +30,9 @@ export default withAuth(function EmployeesPage() {
     }
   };
 
-  useEffect(() => { fetchEmployees(); }, []);
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
   const handleAdd = async () => {
     const ssn = prompt("SSN:");
@@ -43,8 +41,9 @@ export default withAuth(function EmployeesPage() {
     const salaryS = prompt("Salary:");
     const password = prompt("Password:");
     if (!ssn || !name || !email || !salaryS || !password) return;
+    const salary = parseFloat(salaryS);
     try {
-      await api.post("/employees", { ssn, name, email, salary: parseFloat(salaryS), password });
+      await api.post("/employees", { ssn, name, email, salary, password });
       fetchEmployees();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Add failed");
@@ -57,10 +56,11 @@ export default withAuth(function EmployeesPage() {
     const salaryS = prompt("Salary:", String(emp.salary));
     const password = prompt("New password (leave blank to keep):", "");
     if (name == null || email == null || salaryS == null) return;
-    const payload: any = { name, email, salary: parseFloat(salaryS) };
+    const salary = parseFloat(salaryS);
+    const payload: any = { name, email, salary };
     if (password) payload.password = password;
     try {
-      await api.patch(`/employees/${emp.ssn}`, payload);
+      await api.patch(/employees/${emp.ssn}, payload);
       fetchEmployees();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Update failed");
@@ -68,73 +68,81 @@ export default withAuth(function EmployeesPage() {
   };
 
   const handleDelete = async (ssn: string) => {
-    if (!confirm("Are you sure you want to delete this employee?")) return;
+    if (!confirm("Really delete this employee?")) return;
     try {
-      await api.delete(`/employees/${ssn}`);
-      setEmployees(es => es.filter(e => e.ssn !== ssn));
+      await api.delete(/employees/${ssn});
+      setEmployees((es) => es.filter((e) => e.ssn !== ssn));
     } catch {
       alert("Delete failed");
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-full"><p>Loading…</p></div>;
-  if (error) return <p className="text-red-600 text-center">{error}</p>;
+  if (loading) return <p className="text-white text-center">Loading…</p>;
+  if (error) return <p className="text-red-500 text-center">{error}</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-6">
-      <Button variant="ghost" onClick={() => router.push('/dashboard')} className="flex items-center text-gray-700">
-        <ArrowLeft size={18} className="mr-2" /> Back to Dashboard
-      </Button>
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="w-full max-w-6xl p-8 rounded-lg border-4 border-[#6d4c41] bg-[#3e272380] backdrop-blur-md text-white shadow-lg">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="mb-6 px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
+        >
+          ← Back to Dashboard
+        </button>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center space-x-3">
-          <Coffee size={32} className="text-amber-700" />
-          <div>
-            <h1 className="text-4xl font-extrabold">Employees</h1>
-            <p className="text-gray-500">Total: {employees.length} employees</p>
-          </div>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Employees</h1>
+          <button
+            onClick={handleAdd}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded"
+          >
+            + Add Employee
+          </button>
         </div>
-        <Button onClick={handleAdd} className="flex items-center bg-amber-700 hover:bg-amber-600 text-white" variant="solid">
-          <Plus size={16} className="mr-2" /> Add Employee
-        </Button>
-      </div>
 
-      <Card className="shadow-lg">
-        <CardHeader className="bg-amber-100">
-          <h2 className="text-2xl font-semibold">Employee List</h2>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <THead className="bg-amber-50">
-                <Tr>
-                  {['SSN', 'Name', 'Email', 'Salary', 'Actions'].map(h => (
-                    <Th key={h}>{h}</Th>
-                  ))}
-                </Tr>
-              </THead>
-              <TBody>
-                {employees.map(emp => (
-                  <Tr key={emp.ssn} className="hover:bg-amber-50 transition-all">
-                    <Td>{emp.ssn}</Td>
-                    <Td>{emp.name}</Td>
-                    <Td>{emp.email}</Td>
-                    <Td>${emp.salary.toFixed(2)}</Td>
-                    <Td className="space-x-2">
-                      <Button size="sm" variant="outline" className="border-amber-700 text-amber-700 hover:bg-amber-50" onClick={() => handleEdit(emp)}>
-                        <Edit3 size={14} className="mr-1" /> Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" className="hover:bg-red-700" onClick={() => handleDelete(emp.ssn)}>
-                        <Trash2 size={14} className="mr-1" /> Delete
-                      </Button>
-                    </Td>
-                  </Tr>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse table-auto">
+            <thead>
+              <tr className="bg-[#4e342e] text-white">
+                {["SSN", "Name", "Email", "Salary", "Actions"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left font-semibold border-b border-gray-500">
+                    {h}
+                  </th>
                 ))}
-              </TBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map((emp) => (
+                <tr
+                  key={emp.ssn}
+                  className="border-b border-gray-500 hover:bg-[#5d403780] transition-all"
+                >
+                  <td className="px-4 py-2">{emp.ssn}</td>
+                  <td className="px-4 py-2">{emp.name}</td>
+                  <td className="px-4 py-2">{emp.email}</td>
+                  <td className="px-4 py-2">${emp.salary.toFixed(2)}</td>
+                  <td className="px-4 py-2 space-x-4">
+                    <button
+                      onClick={() => handleEdit(emp)}
+                      className="text-blue-400 hover:underline"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(emp.ssn)}
+                      className="text-red-400 hover:underline"
+                    >
+                      ❌ Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
-});
+}
+
+export default withAuth(EmployeesPage);
