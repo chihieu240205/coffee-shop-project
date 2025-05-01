@@ -17,36 +17,31 @@ interface CartItem {
 }
 
 export default withAuth(function PosPage() {
-  const { logout } = useAuth();
+  const { logout } = useAuth(); // still imported but unused (just in case)
   const router = useRouter();
 
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [payment, setPayment] = useState("cash");
 
-  // 1) Fetch menu once
   useEffect(() => {
-    api.get<MenuItem[]>("/menu_items").then(r => setMenu(r.data));
+    api.get<MenuItem[]>("/menu_items").then((r) => setMenu(r.data));
   }, []);
 
-  // 2) Pure addToCart
   const addToCart = (item: MenuItem) => {
-    setCart(prev => {
-      const exists = prev.find(ci => ci.menu_item_name === item.name);
+    setCart((prev) => {
+      const exists = prev.find((ci) => ci.menu_item_name === item.name);
       if (exists) {
-        // return a brand-new array, bumping only that item’s quantity
-        return prev.map(ci =>
+        return prev.map((ci) =>
           ci.menu_item_name === item.name
             ? { ...ci, quantity: ci.quantity + 1 }
             : ci
         );
       }
-      // first time: append with qty 1
       return [...prev, { menu_item_name: item.name, quantity: 1 }];
     });
   };
 
-  // 3) Place order
   const placeOrder = async () => {
     if (cart.length === 0) {
       alert("Cart is empty");
@@ -55,84 +50,87 @@ export default withAuth(function PosPage() {
     try {
       await api.post("/orders", { items: cart, payment_method: payment });
       alert("Order placed!");
-      setCart([]);             // clear cart
-      router.push("/");        // back to home (or /index)
+      setCart([]);
+      router.push("/");
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to place order");
     }
   };
 
   return (
-    <div className="p-8">
-      <button
-        onClick={() => router.push("/")}
-        className="mb-4 px-4 py-2 bg-gray-200 rounded"
-      >
-        ← Back
-      </button>
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="w-full max-w-5xl p-8 bg-[#3e272380] backdrop-blur-md border-4 border-[#6d4c41] rounded-lg text-white shadow-lg">
+        <button
+          onClick={() => router.push("/")}
+          className="mb-6 px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
+        >
+          ← Back
+        </button>
 
-      <h1 className="text-2xl font-bold mb-4">Point of Sale</h1>
+        <h1 className="text-3xl font-bold mb-6">Point of Sale</h1>
 
-      <section className="mb-8">
-        <h2 className="text-xl mb-2">Menu</h2>
-        <div className="grid grid-cols-3 gap-4">
-          {menu.map(item => (
-            <div key={item.name} className="p-4 border rounded">
-              <h3 className="font-semibold">{item.name}</h3>
-              <p>${item.price.toFixed(2)}</p>
-              <button
-                onClick={() => addToCart(item)}
-                className="mt-2 px-3 py-1 bg-green-500 text-white rounded"
+        {/* MENU SECTION */}
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Menu</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {menu.map((item) => (
+              <div
+                key={item.name}
+                className="p-4 rounded border border-[#6d4c41] bg-[#5d403730] shadow hover:shadow-md transition"
               >
-                + Add
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-xl mb-2">Cart</h2>
-        {cart.length === 0 ? (
-          <p>No items yet</p>
-        ) : (
-          <ul className="mb-4">
-            {cart.map(ci => (
-              <li key={ci.menu_item_name}>
-                {ci.menu_item_name} × {ci.quantity}
-              </li>
+                <h3 className="font-semibold text-lg">{item.name}</h3>
+                <p className="text-gray-200">${item.price.toFixed(2)}</p>
+                <button
+                  onClick={() => addToCart(item)}
+                  className="mt-3 btn w-full"
+                >
+                  + Add
+                </button>
+              </div>
             ))}
-          </ul>
-        )}
+          </div>
+        </section>
 
-        <label className="block mb-4">
-          Payment:
-          <select
-            value={payment}
-            onChange={e => setPayment(e.target.value)}
-            className="ml-2 border rounded"
-          >
-            <option value="cash">Cash</option>
-            <option value="credit card">Credit Card</option>
-            <option value="app">App</option>
-          </select>
-        </label>
+        {/* CART SECTION */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Cart</h2>
+          {cart.length === 0 ? (
+            <p className="text-gray-300 mb-6">No items yet</p>
+          ) : (
+            <ul className="mb-6 space-y-1">
+              {cart.map((ci) => (
+                <li key={ci.menu_item_name} className="text-white">
+                  {ci.menu_item_name} × {ci.quantity}
+                </li>
+              ))}
+            </ul>
+          )}
 
-        <div className="flex gap-4">
-          <button
-            onClick={placeOrder}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Place Order
-          </button>
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-red-500 text-white rounded"
-          >
-            Log Out
-          </button>
-        </div>
-      </section>
+          {/* PAYMENT SELECT */}
+          <label className="block mb-6">
+            <span className="mr-2">Payment:</span>
+            <select
+              value={payment}
+              onChange={(e) => setPayment(e.target.value)}
+              className="border border-[#6d4c41] bg-transparent text-white rounded px-3 py-1"
+            >
+              <option value="cash">Cash</option>
+              <option value="credit card">Credit Card</option>
+              <option value="app">App</option>
+            </select>
+          </label>
+
+          {/* PLACE ORDER BUTTON */}
+          <div className="flex">
+            <button
+              onClick={placeOrder}
+              className="btn bg-blue-600 hover:bg-blue-700"
+            >
+              Place Order
+            </button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 });
