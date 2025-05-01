@@ -21,6 +21,14 @@ function HomePage() {
             <Link href="/accounting">
               <span className="text-blue-400 hover:underline text-xl cursor-pointer">📊 View Accounting</span>
             </Link>
+            <Link href="/menu_items">
+              <span className="text-blue-400 hover:underline text-xl cursor-pointer">📋 View Menu</span>
+            </Link>
+            {user?.role === "manager" && (
+            <Link href="/analytics" className="text-blue-400 hover:underline text-xl">
+              📈 Analytics
+            </Link>
+            )}
           </nav>
         )}
 

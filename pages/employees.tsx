@@ -60,7 +60,7 @@ function EmployeesPage() {
     const payload: any = { name, email, salary };
     if (password) payload.password = password;
     try {
-      await api.patch(/employees/${emp.ssn}, payload);
+      await api.patch(`/employees/${emp.ssn}`, payload);
       fetchEmployees();
     } catch (err: any) {
       alert(err.response?.data?.detail || "Update failed");
@@ -70,7 +70,7 @@ function EmployeesPage() {
   const handleDelete = async (ssn: string) => {
     if (!confirm("Really delete this employee?")) return;
     try {
-      await api.delete(/employees/${ssn});
+      await api.delete(`/employees/${ssn}`);
       setEmployees((es) => es.filter((e) => e.ssn !== ssn));
     } catch {
       alert("Delete failed");
@@ -87,7 +87,7 @@ function EmployeesPage() {
           onClick={() => router.push("/dashboard")}
           className="mb-6 px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
         >
-          ← Back to Dashboard
+          ← Back
         </button>
 
         <div className="flex justify-between items-center mb-6">

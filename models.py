@@ -64,7 +64,7 @@ class MenuItem(SQLModel, table=True):
 
 class Recipe(SQLModel, table=True):
     __tablename__ = "recipe"
-    recipe_id: int = Field(primary_key=True)
+    recipe_id: Optional[int] = Field(default=None, primary_key=True)
     menu_item_name: str = Field(foreign_key="menu_item.name", nullable=False, unique=True)
 
     menu_item: MenuItem = Relationship(back_populates="recipe")

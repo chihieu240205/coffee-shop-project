@@ -109,14 +109,14 @@ function InventoryItemsPage() {
           onClick={() => router.push("/dashboard")}
           className="mb-6 px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
         >
-          ← Back to Dashboard
+          ← Back
         </button>
 
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Inventory</h1>
           <button
             onClick={handleAdd}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded"
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded"
           >
             + Add Item
           </button>

@@ -17,7 +17,7 @@ interface CartItem {
 }
 
 export default withAuth(function PosPage() {
-  const { logout } = useAuth(); // still imported but unused (just in case)
+  const { logout } = useAuth(); // unused
   const router = useRouter();
 
   const [menu, setMenu] = useState<MenuItem[]>([]);
@@ -82,7 +82,7 @@ export default withAuth(function PosPage() {
                 <p className="text-gray-200">${item.price.toFixed(2)}</p>
                 <button
                   onClick={() => addToCart(item)}
-                  className="mt-3 btn w-full"
+                  className="mt-3 w-full rounded-full border border-white text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm px-4 py-2 transition-all duration-200"
                 >
                   + Add
                 </button>
@@ -120,7 +120,6 @@ export default withAuth(function PosPage() {
             </select>
           </label>
 
-          {/* PLACE ORDER BUTTON */}
           {/* PLACE ORDER BUTTON */}
           <div className="flex">
             <button
