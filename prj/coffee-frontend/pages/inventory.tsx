@@ -142,7 +142,9 @@ function InventoryItemsPage() {
                   <td className="px-4 py-2">{i.name}</td>
                   <td className="px-4 py-2">{i.unit}</td>
                   <td className="px-4 py-2">${i.price_per_unit.toFixed(2)}</td>
-                  <td className="px-4 py-2">{i.amount_in_stock}</td>
+                  <td className="px-4 py-2">
+                    {Math.max(i.amount_in_stock, 0)}
+                  </td>
                   <td className="px-4 py-2 space-x-4">
                     <button
                       onClick={() => handleEdit(i)}

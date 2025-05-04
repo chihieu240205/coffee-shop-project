@@ -16,9 +16,10 @@ function Dashboard() {
           <Link href="/accounting" className="text-blue-400 hover:underline text-xl">📊 Accounting</Link>
           <Link href="/menu_items" className="text-blue-400 hover:underline text-xl">📋 Manage Menu</Link>
           {user?.role === "manager" && (
-            <Link href="/analytics" className="text-blue-400 hover:underline text-xl">
-              📈 Analytics
-            </Link>
+            <>
+              <Link href="/analytics" className="text-blue-400 hover:underline text-xl">📈 Analytics</Link>
+              <Link href="/work-schedules" className="text-blue-400 hover:underline text-xl">📅 Work Schedules</Link>
+            </>
           )}
         </nav>
 

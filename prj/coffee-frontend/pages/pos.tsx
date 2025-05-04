@@ -1,3 +1,4 @@
+// pages/pos.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,15 +7,8 @@ import api from "../services/api";
 import withAuth from "../utils/withAuth";
 import { useAuth } from "../contexts/AuthContext";
 
-interface MenuItem {
-  name: string;
-  price: number;
-}
-
-interface CartItem {
-  menu_item_name: string;
-  quantity: number;
-}
+interface MenuItem { name: string; price: number }
+interface CartItem { menu_item_name: string; quantity: number }
 
 export default withAuth(function PosPage() {
   const { logout } = useAuth();
@@ -26,85 +20,81 @@ export default withAuth(function PosPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Fetch menu items
   useEffect(() => {
-    api
-      .get<MenuItem[]>('/menu_items')
-      .then((r) => setMenu(r.data))
-      .catch((err) => console.error('Failed to load menu:', err));
+    api.get<MenuItem[]>("/menu_items").then(r => setMenu(r.data));
   }, []);
 
-  // Add to cart
   const addToCart = (item: MenuItem) => {
-    setCart((prev) => {
-      const exists = prev.find((ci) => ci.menu_item_name === item.name);
+    setCart(cs => {
+      const exists = cs.find(c => c.menu_item_name === item.name);
       if (exists) {
-        return prev.map((ci) =>
-          ci.menu_item_name === item.name
-            ? { ...ci, quantity: ci.quantity + 1 }
-            : ci
+        return cs.map(c =>
+          c.menu_item_name === item.name
+            ? { ...c, quantity: c.quantity + 1 }
+            : c
         );
       }
-      return [...prev, { menu_item_name: item.name, quantity: 1 }];
+      return [...cs, { menu_item_name: item.name, quantity: 1 }];
     });
   };
 
-  // Place order and fetch LLM suggestions
   const placeOrder = async () => {
-    if (cart.length === 0) {
+    if (!cart.length) {
       alert("Cart is empty");
       return;
     }
-    try {
-      // Create the order
-      await api.post("/orders/", { items: cart, payment_method: payment });
-      alert("Order placed!");
 
-      // Fetch AI-driven suggestions
+    const payload = { items: cart, payment_method: payment };
+
+    // 1) Try to create the order
+    try {
+      await api.post("/orders", payload);
+      alert("✅ Order placed!");
+    } catch (err: any) {
+      // if the backend returns 400 with detail="Not enough X in stock", show it
+      const msg = err.response?.data?.detail ?? "Failed to place order";
+      alert(`⚠️ ${msg}`);
+      return; // stop here, don’t go on to suggestions
+    }
+
+    // 2) Now try to fetch LLM suggestions, but don't block if that fails
+    try {
       const resp = await api.post<{ suggestions: string[] }>(
-        "/llm/suggest/",
-        { items: cart, payment_method: payment }
+        "/llm/suggest",
+        payload
       );
       setSuggestions(resp.data.suggestions);
       setShowSuggestions(true);
-
-      // Clear the cart
-      setCart([]);
-    } catch (err: any) {
-      console.error('Order or suggestions failed:', err);
-      alert(err.response?.data?.detail || 'Failed to place order');
+    } catch {
+      console.warn("LLM suggestions failed, skipping them");
     }
+
+    // 3) Clear cart
+    setCart([]);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-5xl p-8 bg-[#3e272380] backdrop-blur-md border-4 border-[#6d4c41] rounded-lg text-white shadow-lg">
-        {/* Back */}
         <div className="flex justify-between mb-6">
-          <button
-            onClick={() => router.push("/")}
-            className="px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
-          >
+          <button onClick={() => router.push("/")} className="px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300">
             ← Back
           </button>
         </div>
 
         <h1 className="text-3xl font-bold mb-6">Point of Sale</h1>
 
-        {/* MENU SECTION */}
+        {/* MENU */}
         <section className="mb-10">
           <h2 className="text-2xl font-semibold mb-4">Menu</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {menu.map((item) => (
-              <div
-                key={item.name}
-                className="p-4 rounded border border-[#6d4c41] bg-[#5d403730] shadow hover:shadow-md transition"
-              >
+              <div key={item.name} className="p-4 rounded border border-[#6d4c41] bg-[#5d403730]">
                 <h3 className="font-semibold text-lg">{item.name}</h3>
                 <p className="text-gray-200">${item.price.toFixed(2)}</p>
                 <button
                   onClick={() => addToCart(item)}
-                  className="mt-3 w-full rounded-full border border-white text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm px-4 py-2 transition-all duration-200"
+                  className="mt-3 w-full rounded-full border border-white text-white bg-white/10 hover:bg-white/20 px-4 py-2"
                 >
                   + Add
                 </button>
@@ -113,14 +103,14 @@ export default withAuth(function PosPage() {
           </div>
         </section>
 
-        {/* CART SECTION */}
+        {/* CART */}
         <section>
           <h2 className="text-2xl font-semibold mb-4">Cart</h2>
           {cart.length === 0 ? (
             <p className="text-gray-300 mb-6">No items yet</p>
           ) : (
             <ul className="mb-6 space-y-1">
-              {cart.map((ci) => (
+              {cart.map(ci => (
                 <li key={ci.menu_item_name} className="text-white">
                   {ci.menu_item_name} × {ci.quantity}
                 </li>
@@ -128,12 +118,11 @@ export default withAuth(function PosPage() {
             </ul>
           )}
 
-          {/* PAYMENT SELECT */}
           <label className="block mb-6">
             <span className="mr-2">Payment:</span>
             <select
               value={payment}
-              onChange={(e) => setPayment(e.target.value)}
+              onChange={e => setPayment(e.target.value)}
               className="border border-[#6d4c41] bg-transparent text-white rounded px-3 py-1"
             >
               <option value="cash">Cash</option>
@@ -142,26 +131,23 @@ export default withAuth(function PosPage() {
             </select>
           </label>
 
-          {/* PLACE ORDER BUTTON */}
-          <div className="flex">
-            <button
-              onClick={placeOrder}
-              className="btn bg-green-600 hover:bg-green-700"
-            >
-              Place Order
-            </button>
-          </div>
+          <button
+            onClick={placeOrder}
+            className="btn bg-green-600 hover:bg-green-700"
+          >
+            Place Order
+          </button>
         </section>
 
-        {/* SUGGESTIONS PANEL */}
+        {/* SUGGESTIONS */}
         {showSuggestions && (
           <section className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
             <h3 className="text-xl font-semibold mb-2 text-yellow-800">
               You might also like:
             </h3>
             <ul className="list-disc list-inside mb-4 text-yellow-900">
-              {suggestions.map((sug, idx) => (
-                <li key={idx}>{sug}</li>
+              {suggestions.map((sug, i) => (
+                <li key={i}>{sug}</li>
               ))}
             </ul>
             <button

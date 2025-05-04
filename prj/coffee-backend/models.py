@@ -1,8 +1,10 @@
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime, time
+from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, ForeignKey
-from pydantic import BaseModel
+from enum import Enum
+from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 
 class Employee(SQLModel, table=True):
     __tablename__ = "employee"
@@ -14,8 +16,10 @@ class Employee(SQLModel, table=True):
 
     manager: Optional["Manager"] = Relationship(back_populates="employee")
     barista: Optional["Barista"] = Relationship(back_populates="employee")
+    shift_logs: List["ShiftLog"] = Relationship(back_populates="employee")  # ← log of clock-ins/outs/orders
 
 class Manager(SQLModel, table=True):
+    __tablename__ = "manager"
     ssn: str = Field(
         sa_column=Column(
             ForeignKey(
@@ -23,13 +27,14 @@ class Manager(SQLModel, table=True):
                 onupdate="CASCADE",
                 ondelete="CASCADE",
             ),
-            primary_key=True,               # ← PK goes here
+            primary_key=True,
         )
     )
-    ownership_percentage: float          # ← no extra indent
+    ownership_percentage: float
     employee: Employee = Relationship(back_populates="manager")
 
 class Barista(SQLModel, table=True):
+    __tablename__ = "barista"
     ssn: str = Field(
         sa_column=Column(
             ForeignKey(
@@ -37,7 +42,7 @@ class Barista(SQLModel, table=True):
                 onupdate="CASCADE",
                 ondelete="CASCADE",
             ),
-            primary_key=True,               # ← PK goes here
+            primary_key=True,
         )
     )
     employee: Employee = Relationship(back_populates="barista")
@@ -143,7 +148,33 @@ class PromotionItem(SQLModel, table=True):
     promotion: Promotion = Relationship(back_populates="promotion_items")
     menu_item: MenuItem = Relationship(back_populates="promotion_items")
 
-# Pydantic DTOs
+# -- New ShiftLog table --
+class EventType(str, Enum):
+    clock_in = "clock_in"
+    clock_out = "clock_out"
+    order    = "order"
+
+class ShiftLog(SQLModel, table=True):
+    __tablename__ = "shift_log"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    ssn: str = Field(
+        foreign_key="employee.ssn",
+        nullable=False,
+        index=True,
+    )
+    event_type: EventType = Field(
+        sa_column=Column(
+            PGEnum(EventType, name="event_type_enum", create_type=True),
+            nullable=False
+        )
+    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    employee: "Employee" = Relationship(back_populates="shift_logs")
+
+# -- Pydantic DTOs --
+
 class EmployeeCreate(BaseModel):
     ssn: str
     name: str
@@ -172,21 +203,7 @@ class InventoryItemCreate(BaseModel):
     price_per_unit: float
     amount_in_stock: float
 
-class Customer(SQLModel, table=True):
-    __tablename__ = "customer"
-    id: int = Field(primary_key=True)
-    email: str = Field(unique=True, index=True, nullable=False)
-    password_hash: str = Field(nullable=False)
-    name: Optional[str] = None
-
-class CustomerCreate(BaseModel):
-    email: str
-    password: str
-    name: str
-
-class CustomerRead(BaseModel):
-    id: int
-    email: str
-    name: Optional[str]
-
-    model_config = {"from_attributes": True}
+class InventoryItemUpdate(BaseModel):
+    unit: Optional[str] = None
+    price_per_unit: Optional[float] = None
+    amount_in_stock: Optional[float] = None

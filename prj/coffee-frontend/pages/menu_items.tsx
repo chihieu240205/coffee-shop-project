@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Edit3, Trash2, Coffee } from "lucide-react";
+import { Plus, Edit3, Trash2, Coffee } from "lucide-react";
 import withAuth from "../utils/withAuth";
 import { requireManager } from "../utils/requireManager";
 import api from "../services/api";
