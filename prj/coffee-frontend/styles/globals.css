@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === THEME VARIABLES === */
+:root {
+  --background: #f5f5f5; /* light cream */
+  --foreground: #4e342e; /* dark brown */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #3e2723;
+    --foreground: #fbe9e7;
+  }
+}
+
+/* === GLOBAL STYLES === */
+body {
+  background: url('https://img.freepik.com/free-vector/restaurant-mural-wallpaper_52683-47493.jpg?t=st=1745890481~exp=1745894081~hmac=38e323c49c8df6e72fb9f1aa98c4b5dfae81bcf0ac600d7a612ccc97a667f94e&w=1480');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  background-color: var(--background);
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* === FORM ELEMENTS === */
+input, select, textarea {
+  @apply w-full p-2 border rounded bg-transparent text-white border-[#6d4c41] placeholder-gray-300;
+}
+
+/* === BUTTONS === */
+.btn {
+  @apply px-4 py-2 font-semibold rounded text-white transition-all duration-200;
+}
+
+/* === LINKS === */
+a, .hover\:underline {
+  @apply text-white no-underline;
+}
+a:hover, .hover\:underline:hover {
+  @apply underline text-amber-400;
+}
+
+/* === TABLES === */
+table {
+  @apply w-full table-auto border-collapse;
+}
+
+th, td {
+  @apply px-4 py-2;
+}
+
+thead tr {
+  @apply bg-[#4e342e] text-white;
+}
+
+tbody tr {
+  @apply border-b border-gray-600;
+}
+
+tbody tr:hover {
+  @apply bg-[#5d403780] transition-all;
+}
+
+/* === REUSABLE CARD PANEL === */
+.bg-blur-brown {
+  @apply bg-[#3e272380] backdrop-blur-md border-4 border-[#6d4c41] rounded-lg text-white shadow-lg;
+}
