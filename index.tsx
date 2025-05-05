@@ -52,4 +52,6 @@ function HomePage() {
   );
 }
 
+
 export default withAuth(HomePage);
+
