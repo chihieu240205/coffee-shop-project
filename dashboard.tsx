@@ -29,5 +29,4 @@ function Dashboard() {
     </div>
   );
 }
-
 export default withAuth(Dashboard);
