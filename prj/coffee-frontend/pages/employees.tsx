@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import withAuth from "../utils/withAuth";
 import api from "../services/api";
+import { requireManager } from "../utils/requireManager";
 
 interface Employee {
   ssn: string;
@@ -149,4 +150,4 @@ function EmployeesPage() {
   );
 }
 
-export default withAuth(EmployeesPage);
+export default withAuth(requireManager(EmployeesPage));

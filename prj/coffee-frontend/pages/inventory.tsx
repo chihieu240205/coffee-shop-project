@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import api from "../services/api";
 import withAuth from "../utils/withAuth";
 import { useAuth } from "../contexts/AuthContext";
+import { requireManager } from "../utils/requireManager";
 
 interface InventoryItem {
   name: string;
@@ -169,4 +170,4 @@ function InventoryItemsPage() {
   );
 }
 
-export default withAuth(InventoryItemsPage);
+export default withAuth(requireManager(InventoryItemsPage));
