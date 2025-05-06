@@ -323,6 +323,12 @@ def create_order(
 
 # ---- 5) MANAGING EMPLOYEES (manager only) ----
 @app.post(
+    "/employees",
+    response_model=EmployeeRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[protected(), Depends(require_manager_role)],
+)
+@app.post(
     "/employees/",
     response_model=EmployeeRead,
     status_code=status.HTTP_201_CREATED,
@@ -399,7 +405,12 @@ class InventoryItemCreate(BaseModel):
     price_per_unit: float
     amount_in_stock: float
 
-
+@app.post(
+    "/inventory_items",
+    response_model=InventoryItem,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[protected()],
+)
 @app.post(
     "/inventory_items/",
     response_model=InventoryItem,
