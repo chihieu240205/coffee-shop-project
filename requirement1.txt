@@ -1,7 +1,0 @@
-next
-react
-react-dom
-axios
-tailwindcss
-postcss
-autoprefixer
